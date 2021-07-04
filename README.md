@@ -1,9 +1,9 @@
 # Simple to Create NFT Wallet
-Configuration based NFT Wallet Library that creates React screen with all wallet connections for your NFT
+Configuration based NFT Wallet  React Component with all wallet connections for your NFT
 
 ## Installation
 
-``` npm install --save @wholelot/nft-wallet ```
+``` npm install --save nft-wallet ```
 
 ## Usage
 See Connector list example with supported wallets, please update args values as needed.
