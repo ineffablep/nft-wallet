@@ -1,6 +1,6 @@
 {
   "name": "nft-wallet",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "WholeLot NFT and Wallet Libraries, Connect multiple Wallets with React Component",
   "scripts": {
     "build": "npm run clean && npm run  build:esm && npm run build:cjs",
