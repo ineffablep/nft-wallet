@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import ConnectProvider from './ConnectProvider';
 import { IWalletInfo } from './types';
 import QRCode from 'qrcode.react';
+import './WalletContainer.css';
 
 const WalletContainer: React.FC<{ ConnectorList: Array<IWalletInfo>, onConnection?: Function }> = ({ ConnectorList, onConnection }) => {
     const [selectedWallet, setSelectedWallet] = useState<IWalletInfo>();

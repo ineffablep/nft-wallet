@@ -1,9 +1,10 @@
 {
   "name": "nft-wallet",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "WholeLot NFT and Wallet Libraries, Connect multiple Wallets with React Component",
   "scripts": {
-    "build": "npm run clean && npm run  build:esm && npm run build:cjs",
+    "copy":"cp src/*.css lib/cjs && cp src/*.d.ts lib/cjs && cp src/*.css lib/esm &&  cp src/*.d.ts lib/esm",
+    "build": "npm run clean && npm run  build:esm && npm run build:cjs && npm run copy",
     "build:esm": "tsc",
     "build:cjs": "tsc --module commonjs --outDir lib/cjs",
     "clean": "rimraf lib"
