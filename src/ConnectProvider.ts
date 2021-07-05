@@ -43,7 +43,7 @@ const ConnectionProvider = (e: IWalletInfo) => {
             return null;
         }
         case 'portis': {
-            if (e.args && e.args?.dAppId) {
+            if (e.args && e.args?.dAppId && e.args?.networks) {
                 return new PortisConnector({ dAppId: e.args?.dAppId, networks: e.args?.networks });
             }
             return null;
@@ -84,7 +84,7 @@ const ConnectionProvider = (e: IWalletInfo) => {
             return null;
 
         case 'ledger': {
-            if (e.args?.chainId) {
+            if (e.args?.chainId && e.args?.url) {
                 return new LedgerConnector({
                     chainId: e.args?.chainId,
                     url: e.args?.url,
@@ -94,7 +94,7 @@ const ConnectionProvider = (e: IWalletInfo) => {
             return null;
         }
         case 'lattice': {
-            if (e.args?.chainId && e.args?.dAppName) {
+            if (e.args?.chainId && e.args?.dAppName && e.args?.url) {
                 return new LatticeConnector({
                     chainId: e.args?.chainId,
                     appName: e.args?.dAppName,

@@ -6,14 +6,15 @@ export interface IWalletInfo {
     key: string;
     link: string;
     title: string;
+    type: 'all' | 'ethereum' | string;
     description: string;
     logo: string;
     args?: {
-        urls: {
+        urls?: {
             [chainId: number]: string;
         };
-        url: string;
-        networks: Network[];
+        url?: string;
+        networks?: Network[];
         chainId?: number;
         supportedChainIds?: number[];
         dAppId?: string;

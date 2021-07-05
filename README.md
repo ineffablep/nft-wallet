@@ -52,7 +52,7 @@ const ConnectorList = [
         logo: 'https://storage.googleapis.com/opensea-static/logos/portis.png',
         description: 'Connect with Portis, a cloud-hosted Non-Custodial Blockchain wallet ',
         link: 'https://portis.io/',
-        args: {  dAppId: '', networks: [{1:'',4:''}] }
+        args: { dAppId: '', networks: [{ chainId: '1', 1: '' }, { chainId: '4', 4: '' }] }
     },
     {
         title: 'Dapper',
