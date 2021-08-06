@@ -91,15 +91,6 @@ const ConnectorList = [
         args: {  chainId: 1}
     },
     {
-        title: 'Torus',
-        key: 'torus',
-        type: 'all',
-        logo: 'https://storage.opensea.io/static/wallets/torus/torus.png',
-        description: 'Connect with Torus, Login with Google, Facebook or other OAUTH accounts.',
-        link: 'https://tor.us/',
-        args: {  chainId: 1}
-    },
-    {
         title: 'Fortmatic',
         key: 'fortmatic',
         type: 'all',

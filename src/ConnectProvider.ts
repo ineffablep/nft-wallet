@@ -8,7 +8,6 @@ import { LatticeConnector } from '@web3-react/lattice-connector';
 import { AuthereumConnector } from '@web3-react/authereum-connector';
 import { FortmaticConnector } from '@web3-react/fortmatic-connector';
 import { PortisConnector } from '@web3-react/portis-connector';
-import { TorusConnector } from '@web3-react/torus-connector';
 import { CoinbaseProvider } from './CoinbaseProvider';
 import { BitskProvider } from './BitskProvider';
 import { DapperProvider } from './DapperProvider';
@@ -72,11 +71,6 @@ const ConnectionProvider = (e: IWalletInfo) => {
             }
             return null;
         }
-        case 'torus':
-            if (e.args?.chainId) {
-                return new TorusConnector({ chainId: e.args?.chainId })
-            }
-            return null;
         case 'fortmatic':
             if (e.args?.dAppId && e.args?.chainId) {
                 return new FortmaticConnector({ apiKey: e.args?.dAppId, chainId: e.args?.chainId })

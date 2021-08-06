@@ -1,9 +1,9 @@
 {
   "name": "nft-wallet",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "WholeLot NFT and Wallet Libraries, Connect multiple Wallets with React Component",
   "scripts": {
-    "copy":"cp src/*.css lib/cjs && cp src/*.d.ts lib/cjs && cp src/*.css lib/esm &&  cp src/*.d.ts lib/esm",
+    "copy": "cp src/*.css lib/cjs && cp src/*.d.ts lib/cjs && cp src/*.css lib/esm &&  cp src/*.d.ts lib/esm",
     "build": "npm run clean && npm run  build:esm && npm run build:cjs && npm run copy",
     "build:esm": "tsc",
     "build:cjs": "tsc --module commonjs --outDir lib/cjs",
@@ -50,7 +50,6 @@
     "@web3-react/ledger-connector": "^6.1.9",
     "@web3-react/network-connector": "^6.1.9",
     "@web3-react/portis-connector": "^6.1.9",
-    "@web3-react/torus-connector": "^6.1.9",
     "@web3-react/trezor-connector": "^6.1.9",
     "@web3-react/walletconnect-connector": "^6.2.0",
     "@web3-react/walletlink-connector": "^6.2.2",
@@ -59,6 +58,7 @@
     "coinbase": "^2.0.8",
     "qrcode.react": "^1.0.1",
     "react": "^17.0.2",
+    "uuid": "^8.3.2",
     "web3": "^1.4.0",
     "web3-core": "^1.4.0"
   }
