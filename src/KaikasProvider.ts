@@ -9,7 +9,7 @@ export class KaikasProvider {
 
     activate = async () => {
         if (typeof window.klaytn !== 'undefined') {
-            throw new Error('No Kaikas provider was found on window.klaytn');
+            window.location.href = 'https://chrome.google.com/webstore/detail/kaikas/jblndlipeogpafnldhgmapagcccfchpi';
         }
         await window.klaytn.enable();
         const provider = window.klaytn;

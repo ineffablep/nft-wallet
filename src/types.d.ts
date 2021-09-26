@@ -14,10 +14,12 @@ export interface IWalletInfo {
             [chainId: number]: string;
         };
         url?: string;
+        network?: string;
         networks?: Network[];
         chainId?: number;
         supportedChainIds?: number[];
         dAppId?: string;
+        scope?: string;
         dAppName?: string;
         dAppEmail?: string;
         dAppLogoUrl?: string;

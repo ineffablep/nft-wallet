@@ -7,12 +7,12 @@ import { TrezorConnector } from '@web3-react/trezor-connector';
 import { LatticeConnector } from '@web3-react/lattice-connector';
 import { AuthereumConnector } from '@web3-react/authereum-connector';
 import { FortmaticConnector } from '@web3-react/fortmatic-connector';
-import { PortisConnector } from '@web3-react/portis-connector';
-import { CoinbaseProvider } from './CoinbaseProvider';
 import { BitskProvider } from './BitskProvider';
 import { DapperProvider } from './DapperProvider';
 import { KaikasProvider } from './KaikasProvider';
 import { IWalletInfo } from './types';
+import { PortisProvider } from './PortisProvider';
+
 const ConnectionProvider = (e: IWalletInfo) => {
     switch (e.key) {
         //URL hosting
@@ -28,13 +28,12 @@ const ConnectionProvider = (e: IWalletInfo) => {
         /// Already in browse through Chrome Extensions
         case 'metamask':
         case 'injected': {
-            return new InjectedConnector({ supportedChainIds: e.args?.supportedChainIds });
-        }
-        case 'coinbase':
-            if (e.args && e.args?.dAppId && e.args?.dAppSecret) {
-                return new CoinbaseProvider(e.args?.dAppId, e.args?.dAppSecret);
+            try {
+                return new InjectedConnector({ supportedChainIds: e.args?.supportedChainIds });
+            } catch (error) {
+                console.log(error);
             }
-            return null;
+        }
         case 'bitski': {
             if (e.args?.dAppId) {
                 return new BitskProvider(e.args?.dAppId);
@@ -43,7 +42,7 @@ const ConnectionProvider = (e: IWalletInfo) => {
         }
         case 'portis': {
             if (e.args && e.args?.dAppId && e.args?.networks) {
-                return new PortisConnector({ dAppId: e.args?.dAppId, networks: e.args?.networks });
+                return new PortisProvider(e.args?.dAppId, e.args.network);
             }
             return null;
         }

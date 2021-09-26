@@ -1,37 +1,77 @@
+import { post } from '@wholelot/util/lib/fetchHelper';
 export class CoinbaseProvider {
-    dAppId = ''
-    dAppSecret = ''
-    client: any = null;
-    constructor(dAppId: string, dAppSecret: string) {
-        this.dAppId = dAppId;
-        this.dAppSecret = dAppSecret;
+    props: any;
+    constructor(props: any) {
+        this.props = props;
+
     }
+
     activate = async () => {
-        const coinbase = await import('coinbase').then(m => m?.default ?? m);
-        // const Client = require('coinbase').Client;
-        if (this.dAppId && this.dAppSecret) {
-            this.client = new coinbase.Client({ 'apiKey': this.dAppId, 'apiSecret': this.dAppSecret });
-        }
-    };
-
-    getAccount = async () => {
         try {
-            const accounts = await this.client.getAccounts({});
-            return accounts
-        } catch (error) {
-            throw error;
-        }
-    };
-
-    getBalance = async (accountId = {}) => {
-        try {
-            const account = await this.client.getAccount(accountId);
-            if (account) {
-                return account.balance.amount
+            const { dAppId, scope, oAuthUrl, clientId, clientSecret, authKey } = this.props;
+            const split = window.location.href.split('code=');
+            const redirect_uri = window.origin.includes('capacitor://') ? 'urn:ietf:wg:oauth:2.0:oob' : `${window.location.host}/wallet`;
+            if (split && split[1]) {
+                const code = split[1];
+                if (code) {
+                    const data = {
+                        oAuthAppName: 'coinbase',
+                        oAuthAppId: dAppId,
+                        grantType: 'authorization_code',
+                        tokenType: 'Bearer',
+                        code,
+                        scope,
+                        headerParams: { 'CB-VERSION': '2021-09-25' },
+                        routes: [
+                            {
+                                url: "v2/user",
+                                saveObjName: 'user',
+                                resultParamName: 'data',
+                            },
+                            {
+                                url: "v2/accounts",
+                                resultParamName: 'data',
+                                saveObjName: 'accounts',
+                            }
+                        ],
+                        redirect_uri: `http://${redirect_uri}`
+                    };
+                    const results = await post(oAuthUrl, data, { clientId, clientSecret, authKey });
+                    if (results) {
+                        localStorage.setItem('coinbase-user', JSON.stringify(results));
+                    }
+                    return results;
+                }
             }
-            throw new Error('Account not found');
-        } catch (error) {
-            throw error;
+        } catch (error: any) {
+            throw new Error(error);
+        }
+    };
+
+    getAddresses = async (accountId: string) => {
+        if (!accountId) {
+            throw new Error('Account Id required');
+        }
+        const storageUser = localStorage.getItem('coinbase-user');
+        if (storageUser) {
+            const coinbaseObj = JSON.parse(storageUser);
+            if (coinbaseObj) {
+                const url = `https://api.coinbase.com/v2/accounts/${accountId}/addresses`;
+                const headers = {
+                    Authorization: `Bearer ${coinbaseObj.access_token}`,
+                    'CB-VERSION': '2021-09-25'
+                };
+                try {
+                    const json: any = await fetch(url, { headers });
+                    const response: any = await json.json();
+                    if (response) {
+                        return response.data;
+                    }
+                } catch (error: any) {
+                    console.log(error);
+                    throw new Error(error);
+                }
+            }
         }
     };
 }
