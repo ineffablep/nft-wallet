@@ -1,8 +1,8 @@
 /* eslint-disable no-template-curly-in-string */
-import { IonButton, IonInput, IonToggle, useIonPicker } from '@ionic/react';
+import { IonButton, IonInput, IonItem, IonLabel, IonToggle, useIonPicker } from '@ionic/react';
 import React, { useState, useEffect } from 'react'
 
-interface IChain {
+export interface IChain {
     name: string,
     chain: string,
     network: string,
@@ -28,7 +28,9 @@ interface IChain {
         standard: string
     }>,
     text: string,
-    value: string
+    value: string,
+    isCustom?: boolean,
+    addressId?: string
 }
 
 const NetworkPicker: React.FC<{ alchemyApiKey: string, infuraApiKey: string, onChange: Function }> = ({ infuraApiKey, alchemyApiKey, onChange }) => {
@@ -40,6 +42,7 @@ const NetworkPicker: React.FC<{ alchemyApiKey: string, infuraApiKey: string, onC
     const [selectedChain, setSelectedChain] = useState<any>();
     const [customNetworkUrl, setCustomNetworkUrl] = useState('');
     const [customChainId, setCustomChainId] = useState('');
+    const [customAddressId, setCustomAddressId] = useState('');
     const [customNetworkName, setCustomNetworkName] = useState('');
     const [present] = useIonPicker();
 
@@ -110,7 +113,7 @@ const NetworkPicker: React.FC<{ alchemyApiKey: string, infuraApiKey: string, onC
         <div>
             {!showCustomNetworkOption && <IonButton
                 expand="block"
-                fill="outline"
+                fill="default"
                 onClick={() =>
                     present(
                         [
@@ -134,7 +137,7 @@ const NetworkPicker: React.FC<{ alchemyApiKey: string, infuraApiKey: string, onC
             </IonButton>}
             {!showCustomNetworkOption && <IonButton
                 expand="block"
-                fill="outline"
+                fill="default"
                 onClick={() =>
                     present(
                         [
@@ -156,14 +159,43 @@ const NetworkPicker: React.FC<{ alchemyApiKey: string, infuraApiKey: string, onC
             >
                 {selectedChain ? selectedChain : 'Select Chain'}
             </IonButton>}
-            <IonToggle checked={showCustomNetworkOption} onIonChange={e => setShowCustomNetworkOption(e.detail.checked)}>Custom RPC URL</IonToggle>
+            <IonItem className="ion-margin-vertical">
+                <IonLabel color="primary"> Custom RPC Config</IonLabel>
+                <IonToggle checked={showCustomNetworkOption} onIonChange={e => setShowCustomNetworkOption(e.detail.checked)} />
+            </IonItem>
             {showCustomNetworkOption && <div>
-                <IonInput value={customNetworkUrl} type='url' inputMode="url" placeholder="RPC URL" onIonChange={(e) => setCustomNetworkUrl(e.detail.value!)} />
-                <IonInput value={customNetworkName} type="text" inputMode="text" placeholder="Network Name - mainnet,testnet" onIonChange={(e) => setCustomNetworkName(e.detail.value!)} />
-                <IonInput value={customChainId} type="number" placeholder="Chain ID number" onIonChange={(e) => setCustomChainId(e.detail.value!)} />
-                <IonButton fill="outline" size="small" onClick={() => {
-                    onChange({ name: "Custom Network", rpc: [customChainId], chainId: customChainId, networkId: customChainId })
-                }} >Confirm Custom Config</IonButton>
+                <IonItem>
+                    <IonLabel color="primary"> Enter Network URL</IonLabel>
+                    <IonInput value={customNetworkUrl} type='url' inputMode="url" placeholder="RPC URL" onIonChange={(e) => setCustomNetworkUrl(e.detail.value!)} />
+                </IonItem>
+                <IonItem>
+                    <IonLabel color="primary"> Enter Network Name</IonLabel>
+                    <IonInput value={customNetworkName} type="text" inputMode="text" placeholder="Network Name - mainnet,testnet" onIonChange={(e) => setCustomNetworkName(e.detail.value!)} />
+                </IonItem>
+                <IonItem>
+                    <IonLabel color="primary"> Enter Chain Id</IonLabel>
+                    <IonInput value={customChainId} type="number" placeholder="Chain ID number" onIonChange={(e) => setCustomChainId(e.detail.value!)} />
+                </IonItem>
+                <IonItem>
+                    <IonLabel color="primary"> Enter Address Id</IonLabel>
+                    <IonInput value={customAddressId} type="text" placeholder="Address Id" onIonChange={(e) => setCustomAddressId(e.detail.value!)} />
+                </IonItem>
+                <IonItem>
+                    <IonButton fill="default"
+                        onClick={() => {
+                            const obj = {
+                                name: customNetworkName,
+                                rpc: [customNetworkUrl],
+                                chainId: customChainId,
+                                networkId: customChainId,
+                                addressId: customAddressId,
+                                isCustom: true
+                            };
+                            if (onChange) {
+                                onChange(obj);
+                            }
+                        }} >Confirm Custom Config</IonButton>
+                </IonItem>
             </div>}
         </div>
     )

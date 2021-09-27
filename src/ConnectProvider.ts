@@ -101,7 +101,7 @@ const ConnectionProvider = (e: IWalletInfo) => {
             if (e.args && e.args.urls) {
                 const obj = {
                     rpc: e.args.urls,
-                    qrcode: true,
+                    qrcode: false,
                     pollingInterval: 1200
                 }
                 return new RpcWalletProvider(obj);

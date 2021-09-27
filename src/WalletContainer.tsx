@@ -1,42 +1,12 @@
 import React, { useState } from 'react';
-import { IonButton } from '@ionic/react';
-
+import { IonButton, IonItem, IonLabel, IonToggle } from '@ionic/react';
 import Web3 from 'web3';
 import { post } from '@wholelot/util/lib/fetchHelper';
 import ConnectProvider from './ConnectProvider';
 import { IWalletInfo } from './types';
 import './WalletContainer.css';
 import CoinBasePage from './CoinBasePage';
-import NetworkPicker from './NetworkPicker';
-
-interface IChain {
-    name: string,
-    chain: string,
-    network: string,
-    icon: string,
-    rpc: Array<string>,
-    faucets: Array<string>,
-    nativeCurrency: {
-        name: string,
-        symbol: string,
-        decimals: number
-    },
-    infoURL: string,
-    shortName: string,
-    chainId: number,
-    networkId: number,
-    slip44: number,
-    ens: {
-        registry: string,
-    },
-    explorers: Array<{
-        name: string,
-        url: string,
-        standard: string
-    }>,
-    text: string,
-    value: string
-}
+import NetworkPicker, { IChain } from './NetworkPicker';
 
 declare var window: any;
 const WalletContainer: React.FC<{
@@ -57,10 +27,33 @@ const WalletContainer: React.FC<{
     const [selectedNetworkChain, setSelectedNetworkChain] = useState<IChain>();
     const [error, setError] = useState('');
     const [showError, setShowError] = useState(false);
+    const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
     const onConnectToWalletClick = async (chain: IChain) => {
         setSelectedNetworkChain(chain);
-        if (selectedWallet && selectedNetworkChain) {
+        if (chain.isCustom) {
+            setAccount({ id: chain.addressId, account: chain.addressId });
+            setAddress({ id: chain.addressId, address: chain.addressId })
+        } else {
+            const args = selectedWallet && selectedWallet.args ? selectedWallet.args : {}
+            if (args && selectedNetworkChain) {
+                args.chainId = selectedNetworkChain.chainId;
+                args.supportedChainIds = [selectedNetworkChain.chainId];
+                args.network = selectedNetworkChain.network;
+                const networkObj: any = { chainId: selectedNetworkChain.chainId };
+                networkObj[selectedNetworkChain.chainId] = selectedNetworkChain.network;
+                args.networks = [networkObj];
+                args.urls = selectedNetworkChain.rpc;
+                args.url = selectedNetworkChain.rpc[0];
+            }
+            const wallet: any = { ...selectedWallet, args };
+            setSelectedWallet(wallet);
+            await getAccountInfo();
+        }
+    };
+
+    const getAccountInfo = async () => {
+        if (selectedWallet) {
             if (selectedWallet.key === 'metamask' || selectedWallet.key === 'injected') {
                 if (typeof window.ethereum === 'undefined') {
                     window.location.href = 'https://metamask.io/download.html';
@@ -69,19 +62,7 @@ const WalletContainer: React.FC<{
             }
             try {
                 setShowError(false);
-                const { args, ...rest } = selectedWallet;
-                if (args) {
-                    args.chainId = selectedNetworkChain.chainId;
-                    args.supportedChainIds = [selectedNetworkChain.chainId];
-                    args.network = selectedNetworkChain.network;
-                    const networkObj: any = { chainId: selectedNetworkChain.chainId };
-                    networkObj[selectedNetworkChain.chainId] = selectedNetworkChain.network;
-                    args.networks = [networkObj];
-                    args.urls = selectedNetworkChain.rpc;
-                    args.url = selectedNetworkChain.rpc[0];
-                }
-                const obj = { ...rest, args, ...selectedNetworkChain };
-                const conObj: any = ConnectProvider(obj);
+                const conObj: any = ConnectProvider(selectedWallet);
                 if (conObj) {
                     const response = await conObj.activate();
                     const account = response.account ? response.account : await conObj.getAccount();
@@ -113,12 +94,27 @@ const WalletContainer: React.FC<{
                 setShowError(true);
             }
         }
-
     };
 
     const processAccount = async (account: any, address: any) => {
         if (submitUrl) {
-            const data = { ...item, walletAccount: account, walletAddress: address, network: selectedNetworkChain, walletType: selectedWallet ? selectedWallet.type : '' };
+            const data = {
+                ...item,
+                walletAccount: account,
+                walletAddress: address,
+                walletType: selectedWallet ? selectedWallet.type : 'Custom'
+            };
+            if (selectedNetworkChain) {
+                data.networkName = selectedNetworkChain.name;
+                data.networkChainId = selectedNetworkChain.chainId;
+                data.networkChain = selectedNetworkChain.chain;
+                data.networkType = selectedNetworkChain.network;
+                data.networkRpc = selectedNetworkChain.rpc;
+                data.networkFaucets = selectedNetworkChain.faucets;
+                data.networkNativeCurrency = selectedNetworkChain.nativeCurrency;
+                data.networkExplorers = selectedNetworkChain.explorers;
+            }
+
             try {
                 await post(submitUrl, data, rest);
                 if (successRedirectionUrl) {
@@ -165,9 +161,11 @@ const WalletContainer: React.FC<{
                 <div className="text-white pointer ion-float-right" onClick={() => setShowError(false)} >&times;</div>
             </div>}
             <div className="ion-margin">Your wallet, {selectedWallet && <span>powered by <a href={selectedWallet.link} target="_blank" rel="nofollow noopener noreferrer">{selectedWallet.title}</a>, </span>} will be used to securely store your digital goods and cryptocurrencies.</div>
-            {selectedWallet && selectedWallet.key !== 'coinbase' && <NetworkPicker infuraApiKey={infuraApiKey} alchemyApiKey={alchemyApiKey} onChange={(chain: IChain) => onConnectToWalletClick(chain)} />}
-            {!selectedWallet && <div className="wallet-list">
-                {ConnectorList && ConnectorList.map((connector, index) => <div onClick={() => setSelectedWallet(connector)} className="wallet-item" key={`wallet_map_${index}_${connector.key}`} >
+            <div className="wallet-list">
+                {ConnectorList && ConnectorList.map((connector, index) => <div onClick={() => {
+                    setSelectedWallet(connector);
+                    getAccountInfo();
+                }} className="wallet-item" key={`wallet_map_${index}_${connector.key}`} >
                     <div className="wallet-item-img-slot">
                         <img src={connector.logo} alt={connector.title} />
                     </div>
@@ -176,9 +174,15 @@ const WalletContainer: React.FC<{
                     </div>
                 </div>
                 )}
-            </div>}
+            </div>
+            <IonItem>
+                <IonLabel color="primary"> Show Advanced Options</IonLabel>
+                <IonToggle checked={showAdvancedOptions} onIonChange={e => setShowAdvancedOptions(e.detail.checked)} />
+            </IonItem>
+            {showAdvancedOptions && <NetworkPicker infuraApiKey={infuraApiKey} alchemyApiKey={alchemyApiKey} onChange={(chain: IChain) => onConnectToWalletClick(chain)} />}
+
             <div>
-                {account && <IonButton fill="outline" color="primary" size="small" onClick={() => processAccount(account, address)}>Continue</IonButton>}
+                {account && <IonButton fill="outline" expand="block" color="primary" size="small" onClick={() => processAccount(account, address)}>Continue</IonButton>}
             </div>
         </div>
     )
