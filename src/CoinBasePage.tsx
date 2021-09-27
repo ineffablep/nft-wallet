@@ -86,6 +86,19 @@ const CoinBasePage: React.FC<{
 
     const onAccountSelect = (e: any) => {
         setAccountId(e.target.value);
+        const account = accounts.find((f: any) => f.id === e.target.value);
+        if (account) {
+            let amount: any = account.balance ? account.balance.amount : 0;
+            if (typeof amount === 'string') {
+                amount = parseInt(amount, 10);
+            }
+            if (!isNaN(amount)) {
+                if (amount < 0) {
+                    setMessage(`${account.name} account has balance of ${amount}, try another account or different wallet.`);
+                    setShowMessage(true);
+                }
+            }
+        }
     };
 
     const onAccountConfirm = async () => {
@@ -134,7 +147,7 @@ const CoinBasePage: React.FC<{
             </h4>
             {showMessage && <div className="danger ion-padding">
                 {message}
-                <div className="text-white ion-float-right" onClick={() => setShowMessage(false)} >&times;</div>
+                <div className="text-white pointer ion-float-right" onClick={() => setShowMessage(false)} >&times;</div>
             </div>}
             {accounts.length === 0 && <div>
                 <h6>To enable Coinbase you will redirect to Coinbase page for authentication. Be sure to select the {cryptoCurrency} cryptocurrency</h6>

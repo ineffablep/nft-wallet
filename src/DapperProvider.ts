@@ -15,8 +15,22 @@ export class DapperProvider {
         await window.ethereum.enable();
         const provider = window.ethereum;
         this.web3 = new Web3(provider);
+        const account: string | null = await this.getAccount();
+        const response = {
+            account,
+            chainId: 1,
+            provider: this.provider
+        }
+        return response;
+    };
+    deactivate = async () => {
+        this.provider = null;
+        this.web3 = null;
     };
 
+    getChainId = async () => {
+        return 1;
+    }
     getAccount = async () => {
         if (!window.ethereum) {
             throw new Error('No Ethereum provider was found on window.ethereum');

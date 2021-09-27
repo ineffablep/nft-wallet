@@ -8,14 +8,28 @@ export class KaikasProvider {
     web3: Web3 | null = null;
 
     activate = async () => {
-        if (typeof window.klaytn !== 'undefined') {
+        if (typeof window.klaytn === 'undefined') {
             window.location.href = 'https://chrome.google.com/webstore/detail/kaikas/jblndlipeogpafnldhgmapagcccfchpi';
         }
         await window.klaytn.enable();
         const provider = window.klaytn;
         this.web3 = new Web3(provider);
+        const account: string | null = await this.getAccount();
+        const response = {
+            account,
+            chainId: 1,
+            provider: this.provider
+        }
+        return response;
+    };
+    deactivate = async () => {
+        this.provider = null;
+        this.web3 = null;
     };
 
+    getChainId = async () => {
+        return 1;
+    }
     getAccount = async () => {
         if (!window.klaytn) {
             throw new Error('No klaytn provider was found on window.klaytn');

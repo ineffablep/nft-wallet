@@ -36,7 +36,8 @@ const ConnectionProvider = (e: IWalletInfo) => {
         }
         case 'bitski': {
             if (e.args?.dAppId) {
-                return new BitskProvider(e.args?.dAppId);
+                const chainId = e.args.chainId || 1;
+                return new BitskProvider(e.args?.dAppId, chainId);
             }
             return null;
         }

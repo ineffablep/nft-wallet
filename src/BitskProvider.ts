@@ -3,22 +3,37 @@ import Web3 from 'web3';
 export class BitskProvider {
     client: any = null;
     dAppId = '';
+    chainId = 1;
     provider: any = null;
     web3: Web3 | null = null;
-    constructor(dAppId: string) {
+    constructor(dAppId: string, chainId: number) {
         this.dAppId = dAppId;
+        this.chainId = chainId
     }
     activate = async () => {
-        if (this.dAppId) {
-            const Bitski = require('bitski').Bitski;
-            const bitski = new Bitski(this.dAppId, window.location.href + '/bitski_callback');
-            this.provider = bitski.getProvider();
-            this.web3 = new Web3(this.provider);
-            // connect via oauth to use the wallet (call this from a click handler)
-            await bitski.signIn();
+        const Bitski = require('bitski').Bitski;
+        const bitski = new Bitski(this.dAppId, window.location.href + '/bitski_callback');
+        this.provider = bitski.getProvider();
+        this.web3 = new Web3(this.provider);
+        // connect via oauth to use the wallet (call this from a click handler)
+        await bitski.signIn();
+        const account: string | null = await this.getAccount();
+        const response = {
+            account,
+            chainId: this.chainId,
+            provider: this.provider
         }
+        return response;
     };
 
+    deactivate = async () => {
+        this.provider = null;
+        this.web3 = null;
+    };
+
+    getChainId = async () => {
+        return this.chainId;
+    }
     getAccount = async () => {
         try {
             if (this.web3) {
