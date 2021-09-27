@@ -1,13 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { IonButton, IonLabel } from '@ionic/react';
 import { CoinbaseProvider } from './CoinbaseProvider';
-declare global {
-    namespace JSX {
-        interface IntrinsicElements {
-            'ion-button': any;
-            'ion-label': any;
-        }
-    }
-}
+
 const CoinBasePage: React.FC<{
     clientId: string;
     clientSecret: string;
@@ -143,7 +137,7 @@ const CoinBasePage: React.FC<{
         <div>
             <h4>
                 Coinbase Wallet Connection
-                <ion-button fill="outline" color="primary" size="small" slot="end" onClick={onChange}>Change Wallet</ion-button>
+                <IonButton fill="outline" color="primary" size="small" slot="end" onClick={onChange}>Change Wallet</IonButton>
             </h4>
             {showMessage && <div className="danger ion-padding">
                 {message}
@@ -151,12 +145,12 @@ const CoinBasePage: React.FC<{
             </div>}
             {accounts.length === 0 && <div>
                 <h6>To enable Coinbase you will redirect to Coinbase page for authentication. Be sure to select the {cryptoCurrency} cryptocurrency</h6>
-                <ion-button fill="outline" color="primary" size="small" onClick={onConfirmRedirection}>Continue</ion-button>
+                <IonButton fill="outline" color="primary" size="small" onClick={onConfirmRedirection}>Continue</IonButton>
             </div>
             }
             {accounts && accounts.length > 0 && <div className="ion-margin">
                 <div>
-                    <ion-label position="stacked" color="primary"> Select {cryptoCurrency} Account </ion-label>
+                    <IonLabel position="stacked" color="primary"> Select {cryptoCurrency} Account </IonLabel>
                     <select className="select" value={accountId} onChange={onAccountSelect}>
                         <option value="" disabled></option>
                         {accounts.map((acc: any) => <option key={acc.id} value={acc.id}>
@@ -165,12 +159,12 @@ const CoinBasePage: React.FC<{
                     </select>
                 </div>
                 {accountId && addresses.length === 0 && <div>
-                    <ion-button fill="outline" color="primary" size="small" onClick={onAccountConfirm}>Confirm to Load Address</ion-button>
-                    {isCacheLoad && <ion-button fill="outline" color="primary" onClick={onConfirmRedirection} size="small">Refresh Accounts</ion-button>}
+                    <IonButton fill="outline" color="primary" size="small" onClick={onAccountConfirm}>Confirm to Load Address</IonButton>
+                    {isCacheLoad && <IonButton fill="outline" color="primary" onClick={onConfirmRedirection} size="small">Refresh Accounts</IonButton>}
                 </div>
                 }
                 {addresses && addresses.length > 0 && <div>
-                    <ion-label position="stacked" color="primary"> Select Address </ion-label>
+                    <IonLabel position="stacked" color="primary"> Select Address </IonLabel>
                     <select className="select" value={addressId} onChange={onAddressSelect}>
                         <option value="" disabled> Select Address</option>
                         {addresses && addresses.map((acc: any) => <option key={acc.id} value={acc.address}>
@@ -179,7 +173,7 @@ const CoinBasePage: React.FC<{
                     </select>
                 </div>}
                 {accountId && addressId && <div>
-                    <ion-button fill="outline" color="primary" size="small" onClick={onAddressConfirm}>Continue</ion-button>
+                    <IonButton fill="outline" color="primary" size="small" onClick={onAddressConfirm}>Continue</IonButton>
                 </div>
                 }
             </div>}

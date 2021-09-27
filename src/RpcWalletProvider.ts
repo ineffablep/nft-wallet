@@ -1,22 +1,27 @@
+//https://docs.walletconnect.org/quick-start/dapps/web3-provider
+import WalletConnectProvider from "@walletconnect/web3-provider";
 import Web3 from 'web3';
 
-export class BitskProvider {
-    client: any = null;
-    dAppId = '';
-    chainId = 1;
-    provider: any = null;
+export class RpcWalletProvider {
+    rpc: { [chainId: number]: string };
+    provider: any;
     web3: Web3 | null = null;
-    constructor(dAppId: string, chainId: number) {
-        this.dAppId = dAppId;
-        this.chainId = chainId
+    chainId = '1';
+    constructor(rpc: { [chainId: number]: string }) {
+        this.rpc = rpc;
     }
     activate = async () => {
-        const Bitski = require('bitski').Bitski;
-        const bitski = new Bitski(this.dAppId, window.location.href + '/bitski_callback');
-        this.provider = bitski.getProvider();
+
+        //  Create WalletConnect Provider
+        this.provider = new WalletConnectProvider({
+            rpc: this.rpc
+        });
+
+        //  Enable session (triggers QR Code modal)
+        await this.provider.enable();
         this.web3 = new Web3(this.provider);
-        // connect via oauth to use the wallet (call this from a click handler)
-        await bitski.signIn();
+        const chainIds = Object.keys(this.rpc);
+        this.chainId = chainIds[0];
         const account: string | null = await this.getAccount();
         const response = {
             account,
@@ -34,6 +39,7 @@ export class BitskProvider {
     getChainId = async () => {
         return this.web3 ? await this.web3.eth.net.getId() : this.chainId;
     }
+
     getAccount = async () => {
         try {
             if (this.web3) {
@@ -45,7 +51,6 @@ export class BitskProvider {
             throw error;
         }
     };
-
     getBalance = async (accountId = '') => {
         try {
             if (this.web3) {
@@ -72,31 +77,4 @@ export class BitskProvider {
         return this.provider;
     };
 
-    sendTransaction = async (config: {
-        from?: string | number;
-        to?: string;
-        value?: number | string;
-        gas?: number | string;
-        gasPrice?: number | string;
-        data?: string;
-        nonce?: number;
-        chainId?: number;
-        common?: {
-            customChain: {
-                name?: string;
-                networkId: number;
-                chainId: number;
-            };
-            baseChain?: | 'mainnet' | 'goerli' | 'kovan' | 'rinkeby' | 'ropsten';
-            hardfork?: | 'chainstart' | 'homestead' | 'dao' | 'tangerineWhistle' | 'spuriousDragon' | 'byzantium' | 'constantinople' | 'petersburg' | 'istanbul';
-        };
-        chain?: string;
-        hardfork?: string;
-    }) => {
-        if (this.web3) {
-            const txn = await this.web3.eth.sendTransaction(config);
-            return txn;
-        }
-        return null;
-    };
 }

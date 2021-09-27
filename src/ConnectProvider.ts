@@ -1,7 +1,5 @@
 import { InjectedConnector } from '@web3-react/injected-connector';
 import { NetworkConnector } from '@web3-react/network-connector';
-import { WalletConnectConnector } from '@web3-react/walletconnect-connector';
-import { WalletLinkConnector } from '@web3-react/walletlink-connector';
 import { LedgerConnector } from '@web3-react/ledger-connector';
 import { TrezorConnector } from '@web3-react/trezor-connector';
 import { LatticeConnector } from '@web3-react/lattice-connector';
@@ -12,6 +10,7 @@ import { DapperProvider } from './DapperProvider';
 import { KaikasProvider } from './KaikasProvider';
 import { IWalletInfo } from './types';
 import { PortisProvider } from './PortisProvider';
+import { RpcWalletProvider } from './RpcWalletProvider';
 
 const ConnectionProvider = (e: IWalletInfo) => {
     switch (e.key) {
@@ -97,23 +96,16 @@ const ConnectionProvider = (e: IWalletInfo) => {
             }
             return null;
         }
-        case 'walletConnect': {
-            return new WalletConnectConnector({
-                rpc: e.args?.urls,
-                qrcode: true,
-                pollingInterval: 1200
-            });
-        }
-        case 'walletLink': {
-            if (e.args?.url && e.args?.dAppName) {
-                return new WalletLinkConnector({
-                    url: e.args?.url,
-                    appName: e.args?.dAppName,
-                    appLogoUrl: e.args?.dAppLogoUrl,
-                    supportedChainIds: e.args?.supportedChainIds
-                });
+        case 'walletConnect':
+        case 'rpc': {
+            if (e.args && e.args.urls) {
+                const obj = {
+                    rpc: e.args.urls,
+                    qrcode: true,
+                    pollingInterval: 1200
+                }
+                return new RpcWalletProvider(obj);
             }
-            return null;
         }
 
 
