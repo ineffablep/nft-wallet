@@ -1,6 +1,6 @@
 {
-  "name": "nft-wallet",
-  "version": "1.3.5",
+  "name": "@wholelot/nft",
+  "version": "1.0.0",
   "description": "WholeLot NFT and Wallet Libraries, Connect multiple Wallets with React Component",
   "scripts": {
     "copy": "cp src/*.css lib/cjs && cp src/*.d.ts lib/cjs && cp src/*.css lib/esm &&  cp src/*.d.ts lib/esm",
@@ -35,7 +35,6 @@
   "bugs": {
     "url": "https://github.com/ineffable/nft-wallet/issues"
   },
-  "license": "ISC",
   "devDependencies": {
     "@types/coinbase": "^2.0.6",
     "@types/uuid": "^8.3.1",

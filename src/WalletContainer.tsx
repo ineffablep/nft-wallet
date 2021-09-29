@@ -35,20 +35,26 @@ const WalletContainer: React.FC<{
             setAccount({ id: chain.addressId, account: chain.addressId });
             setAddress({ id: chain.addressId, address: chain.addressId })
         } else {
-            const args = selectedWallet && selectedWallet.args ? selectedWallet.args : {}
-            if (args && selectedNetworkChain) {
-                args.chainId = selectedNetworkChain.chainId;
-                args.supportedChainIds = [selectedNetworkChain.chainId];
-                args.network = selectedNetworkChain.network;
-                const networkObj: any = { chainId: selectedNetworkChain.chainId };
-                networkObj[selectedNetworkChain.chainId] = selectedNetworkChain.network;
-                args.networks = [networkObj];
-                args.urls = selectedNetworkChain.rpc;
-                args.url = selectedNetworkChain.rpc[0];
+            let wl = selectedWallet;
+            if (!wl) {
+                wl = ConnectorList.find(f => f.key === 'walletConnect');
             }
-            const wallet: any = { ...selectedWallet, args };
-            setSelectedWallet(wallet);
-            await getAccountInfo();
+            if (wl) {
+                const args = wl.args;
+                if (args && selectedNetworkChain) {
+                    args.chainId = selectedNetworkChain.chainId;
+                    args.supportedChainIds = [selectedNetworkChain.chainId];
+                    args.network = selectedNetworkChain.network;
+                    const networkObj: any = { chainId: selectedNetworkChain.chainId };
+                    networkObj[selectedNetworkChain.chainId] = selectedNetworkChain.network;
+                    args.networks = [networkObj];
+                    args.urls = selectedNetworkChain.rpc;
+                    args.url = selectedNetworkChain.rpc[0];
+                }
+                const wallet: any = { ...wl, args };
+                setSelectedWallet(wallet);
+                await getAccountInfo();
+            }
         }
     };
 
