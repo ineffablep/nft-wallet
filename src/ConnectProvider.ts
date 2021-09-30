@@ -11,7 +11,7 @@ import { KaikasProvider } from './KaikasProvider';
 import { IWalletInfo } from './types';
 import { PortisProvider } from './PortisProvider';
 import { RpcWalletProvider } from './RpcWalletProvider';
-
+import { CustomProvider } from './CustomProvider';
 const ConnectionProvider = (e: IWalletInfo) => {
     switch (e.key) {
         //URL hosting
@@ -105,6 +105,11 @@ const ConnectionProvider = (e: IWalletInfo) => {
                     pollingInterval: 1200
                 }
                 return new RpcWalletProvider(obj);
+            }
+        }
+        case 'custom': {
+            if (e.args && e.args.urls) {
+                return new CustomProvider(e);
             }
         }
 

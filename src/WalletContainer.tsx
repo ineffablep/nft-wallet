@@ -19,8 +19,10 @@ const WalletContainer: React.FC<{
     successRedirectionUrl: string,
     clientId: string,
     clientSecret: string,
+    enableCustomRpc: boolean,
+    enableAdvancedOptions: boolean,
     successParams: Array<{ field: string, key: string }>
-}> = ({ ConnectorList, submitUrl, item, successRedirectionUrl, infuraApiKey, alchemyApiKey, successParams, history, ...rest }) => {
+}> = ({ ConnectorList, submitUrl, item, successRedirectionUrl, enableCustomRpc, enableAdvancedOptions, infuraApiKey, alchemyApiKey, successParams, history, ...rest }) => {
     const [account, setAccount] = useState<any>();
     const [address, setAddress] = useState<any>();
     const [selectedWallet, setSelectedWallet] = useState<IWalletInfo>();
@@ -37,7 +39,7 @@ const WalletContainer: React.FC<{
         } else {
             let wl = selectedWallet;
             if (!wl) {
-                wl = ConnectorList.find(f => f.key === 'walletConnect');
+                wl = { key: 'custom', title: 'Custom', type: 'ethereum', link: '', description: 'Connect to your own Wallet with RPC', logo: '' };
             }
             if (wl) {
                 const args = wl.args;
@@ -89,6 +91,13 @@ const WalletContainer: React.FC<{
                                 setError(`${selectedWallet.title} Wallet account has balance of ${balance}, try another wallet`);
                                 setShowError(true);
                             }
+                        }
+                        if (selectedWallet.key === 'custom') {
+                            setAccount({ id: account, account: account, balance });
+                            setAddress({ id: account, address: account })
+                            await response.deactivate();
+                            setError(`We did not check ${selectedWallet.title} Wallet account balance, minting will fail if wallet doesn't have sufficient funds.`);
+                            setShowError(true);
                         }
                     } else {
                         setError(`Failed to load accounts for ${selectedWallet.title}, try another wallet`);
@@ -181,11 +190,12 @@ const WalletContainer: React.FC<{
                 </div>
                 )}
             </div>
-            <IonItem>
+            {enableAdvancedOptions && <IonItem className="ion-margin-vertical" lines='none'>
                 <IonLabel color="primary"> Show Advanced Options</IonLabel>
                 <IonToggle checked={showAdvancedOptions} onIonChange={e => setShowAdvancedOptions(e.detail.checked)} />
             </IonItem>
-            {showAdvancedOptions && <NetworkPicker infuraApiKey={infuraApiKey} alchemyApiKey={alchemyApiKey} onChange={(chain: IChain) => onConnectToWalletClick(chain)} />}
+            }
+            {enableCustomRpc && <NetworkPicker infuraApiKey={infuraApiKey} alchemyApiKey={alchemyApiKey} onChange={(chain: IChain) => onConnectToWalletClick(chain)} />}
 
             <div>
                 {account && <IonButton fill="outline" expand="block" color="primary" size="small" onClick={() => processAccount(account, address)}>Continue</IonButton>}
