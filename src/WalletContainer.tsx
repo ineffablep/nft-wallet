@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { IonButton, IonItem, IonLabel, IonToggle } from '@ionic/react';
+import { IonButton } from '@ionic/react';
 import Web3 from 'web3';
 import { post } from '@wholelot/util/lib/fetchHelper';
 import ConnectProvider from './ConnectProvider';
@@ -29,36 +29,31 @@ const WalletContainer: React.FC<{
     const [selectedNetworkChain, setSelectedNetworkChain] = useState<IChain>();
     const [error, setError] = useState('');
     const [showError, setShowError] = useState(false);
-    const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
     const onConnectToWalletClick = async (chain: IChain) => {
         setSelectedNetworkChain(chain);
         if (chain.isCustom) {
             setAccount({ id: chain.addressId, account: chain.addressId });
             setAddress({ id: chain.addressId, address: chain.addressId })
-        } else {
-            let wl = selectedWallet;
-            if (!wl) {
-                wl = { key: 'custom', title: 'Custom', type: 'ethereum', link: '', description: 'Connect to your own Wallet with RPC', logo: '' };
-            }
-            if (wl) {
-                const args = wl.args;
-                if (args && selectedNetworkChain) {
-                    args.chainId = selectedNetworkChain.chainId;
-                    args.supportedChainIds = [selectedNetworkChain.chainId];
-                    args.network = selectedNetworkChain.network;
-                    const networkObj: any = { chainId: selectedNetworkChain.chainId };
-                    networkObj[selectedNetworkChain.chainId] = selectedNetworkChain.network;
-                    args.networks = [networkObj];
-                    args.urls = selectedNetworkChain.rpc;
-                    args.url = selectedNetworkChain.rpc[0];
-                }
-                const wallet: any = { ...wl, args };
-                setSelectedWallet(wallet);
-                await getAccountInfo();
-            }
         }
-    };
+        if (chain) {
+            const wl: IWalletInfo = {
+                key: 'custom', title: 'Custom',
+                type: 'ethereum',
+                link: '',
+                description: 'Connect to your own Wallet with RPC',
+                logo: '',
+                args: {
+                    chainId: chain?.chainId,
+                    network: chain?.network,
+                    urls: chain?.rpc,
+                    url: chain?.rpc[0],
+                }
+            }
+            setSelectedWallet(wl);
+            await getAccountInfo();
+        }
+    }
 
     const getAccountInfo = async () => {
         if (selectedWallet) {
@@ -88,16 +83,22 @@ const WalletContainer: React.FC<{
                                 setAddress({ id: account, address: account })
                                 await response.deactivate();
                             } else {
-                                setError(`${selectedWallet.title} Wallet account has balance of ${balance}, try another wallet`);
+                                const address = typeof account === 'string' ? account : '';
+                                setError(`${selectedWallet.title} Wallet account has balance of ${balance}, try another wallet or try adding funds to the wallet address: ${address}`);
                                 setShowError(true);
                             }
                         }
                         if (selectedWallet.key === 'custom') {
-                            setAccount({ id: account, account: account, balance });
-                            setAddress({ id: account, address: account })
-                            await response.deactivate();
-                            setError(`We did not check ${selectedWallet.title} Wallet account balance, minting will fail if wallet doesn't have sufficient funds.`);
-                            setShowError(true);
+                            if (account) {
+                                setAccount({ id: account, account: account, balance });
+                                setAddress({ id: account, address: account })
+                                await response.deactivate();
+                                setError(`We did not check ${selectedWallet.title} Wallet account balance, minting will fail if wallet doesn't have sufficient funds.`);
+                                setShowError(true);
+                            } else {
+                                setError(`${selectedWallet.title} account information not available form the connections or network may be not compatible, please provide other RPC info or select another wallet.`);
+                                setShowError(true);
+                            }
                         }
                     } else {
                         setError(`Failed to load accounts for ${selectedWallet.title}, try another wallet`);
@@ -190,12 +191,7 @@ const WalletContainer: React.FC<{
                 </div>
                 )}
             </div>
-            {enableAdvancedOptions && <IonItem className="ion-margin-vertical" lines='none'>
-                <IonLabel color="primary"> Show Advanced Options</IonLabel>
-                <IonToggle checked={showAdvancedOptions} onIonChange={e => setShowAdvancedOptions(e.detail.checked)} />
-            </IonItem>
-            }
-            {enableCustomRpc && <NetworkPicker infuraApiKey={infuraApiKey} alchemyApiKey={alchemyApiKey} onChange={(chain: IChain) => onConnectToWalletClick(chain)} />}
+            {enableAdvancedOptions && <NetworkPicker enableCustomRpc={enableCustomRpc} infuraApiKey={infuraApiKey} alchemyApiKey={alchemyApiKey} onChange={(chain: IChain) => onConnectToWalletClick(chain)} />}
 
             <div>
                 {account && <IonButton fill="outline" expand="block" color="primary" size="small" onClick={() => processAccount(account, address)}>Continue</IonButton>}

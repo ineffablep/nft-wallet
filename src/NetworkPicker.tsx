@@ -33,7 +33,7 @@ export interface IChain {
     addressId?: string
 }
 
-const NetworkPicker: React.FC<{ alchemyApiKey: string, infuraApiKey: string, onChange: Function }> = ({ infuraApiKey, alchemyApiKey, onChange }) => {
+const NetworkPicker: React.FC<{ alchemyApiKey: string, enableCustomRpc: boolean, infuraApiKey: string, onChange: Function }> = ({ infuraApiKey, enableCustomRpc, alchemyApiKey, onChange }) => {
     const [chains, setChains] = useState<Array<IChain>>([]);
     const [filterChains, setFilterChains] = useState<Array<{ text: string, value: string }>>([]);
     const [networks, setNetworks] = useState<Array<string>>([]);
@@ -159,10 +159,10 @@ const NetworkPicker: React.FC<{ alchemyApiKey: string, infuraApiKey: string, onC
             >
                 {selectedChain ? selectedChain : 'Select Chain'}
             </IonButton>}
-            <IonItem className="ion-margin-vertical">
+            {enableCustomRpc && <IonItem className="ion-margin-vertical">
                 <IonLabel color="primary"> Custom RPC Config</IonLabel>
                 <IonToggle checked={showCustomNetworkOption} onIonChange={e => setShowCustomNetworkOption(e.detail.checked)} />
-            </IonItem>
+            </IonItem>}
             {showCustomNetworkOption && <div>
                 <IonItem>
                     <IonLabel color="primary"> Enter Network URL</IonLabel>

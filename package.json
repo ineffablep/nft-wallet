@@ -1,6 +1,6 @@
 {
   "name": "@wholelot/nft",
-  "version": "1.0.1",
+  "version": "1.0.4",
   "description": "WholeLot NFT and Wallet Libraries, Connect multiple Wallets with React Component",
   "scripts": {
     "copy": "cp src/*.css lib/cjs && cp src/*.d.ts lib/cjs && cp src/*.css lib/esm &&  cp src/*.d.ts lib/esm",
