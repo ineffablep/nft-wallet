@@ -11,6 +11,7 @@ const CoinBasePage: React.FC<{
     authKey?: any;
     onChangeWallet: Function;
     onContinue: Function;
+    callbackUrl?: string;
     location?: any;
     scope?: 'wallet:accounts:read' |
     'wallet:accounts:update' |
@@ -46,7 +47,7 @@ const CoinBasePage: React.FC<{
     const [accountId, setAccountId] = useState('');
     const [addressId, setAddressId] = useState('');
     const [isCacheLoad, setIsCacheLoaded] = useState(storedAccount ? true : false);
-    const { clientId, clientSecret, dAppId, scope, location, cryptoCurrency, onChangeWallet, onContinue } = props;
+    const { clientId, clientSecret, dAppId, scope, location, callbackUrl = "/mintNft", onContinue } = props;
     const { search } = location || {};
     const provider = useMemo(() => new CoinbaseProvider(props), [props]);
     useEffect(() => {
@@ -88,7 +89,7 @@ const CoinBasePage: React.FC<{
             }
             if (!isNaN(amount)) {
                 if (amount < 0) {
-                    setMessage(`${account.name} account has balance of ${amount}, try another account or different wallet.`);
+                    setMessage(`${account.name} account has a balance of ${amount}, try another account or different wallet.`);
                     setShowMessage(true);
                 }
             }
@@ -122,35 +123,25 @@ const CoinBasePage: React.FC<{
     };
 
     const onConfirmRedirection = () => {
-        const redirect_uri = window.origin.includes('capacitor://') ? 'urn:ietf:wg:oauth:2.0:oob' : `${window.location.host}/wallet`;
+        const redirect_uri = window.origin.includes('capacitor://') ? 'urn:ietf:wg:oauth:2.0:oob' : `${window.location.host}${callbackUrl}`;
         setIsCacheLoaded(false);
         window.location.href = `https://www.coinbase.com/oauth/authorize?response_type=code&client_id=${dAppId}&redirect_uri=http://${redirect_uri}&scope=${scope}`;
     };
 
-    const onChange = () => {
-        if (onChangeWallet) {
-            onChangeWallet();
-        }
-    };
-
     return (
         <div>
-            <h4>
-                Coinbase Wallet Connection
-                <IonButton fill="outline" color="primary" size="small" slot="end" onClick={onChange}>Change Wallet</IonButton>
-            </h4>
             {showMessage && <div className="danger ion-padding">
                 {message}
                 <div className="text-white pointer ion-float-right" onClick={() => setShowMessage(false)} >&times;</div>
             </div>}
             {accounts.length === 0 && <div>
-                <h6>To enable Coinbase you will redirect to Coinbase page for authentication. Be sure to select the {cryptoCurrency} cryptocurrency</h6>
-                <IonButton fill="outline" color="primary" size="small" onClick={onConfirmRedirection}>Continue</IonButton>
+                <h6>To enable Coinbase you will redirect to Coinbase page for authentication.</h6>
+                <IonButton fill="outline" slot="start" color="success" size="small" onClick={onConfirmRedirection}>Continue</IonButton>
             </div>
             }
             {accounts && accounts.length > 0 && <div className="ion-margin">
                 <div>
-                    <IonLabel position="stacked" color="primary"> Select {cryptoCurrency} Account </IonLabel>
+                    <IonLabel position="stacked" color="primary"> Select  Account </IonLabel>
                     <select className="select" value={accountId} onChange={onAccountSelect}>
                         <option value="" disabled></option>
                         {accounts.map((acc: any) => <option key={acc.id} value={acc.id}>
