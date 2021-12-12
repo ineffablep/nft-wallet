@@ -1,21 +1,32 @@
-import React, { useState } from 'react';
-import { IonButton } from '@ionic/react';
-import Web3 from 'web3';
+import React, { useState, useCallback, useEffect } from 'react';
 import { post } from '@wholelot/util/lib/fetchHelper';
 import ConnectProvider from './ConnectProvider';
-import { IWalletInfo } from './types';
-import './WalletContainer.css';
-import CoinBasePage from './CoinBasePage';
 import NetworkPicker, { IChain } from './NetworkPicker';
+import CoinbaseProvider from './Providers/CoinbaseProvider';
+import { IWalletInfo, IAccount } from './types';
+import './WalletContainer.css';
 
 declare var window: any;
+export const handleError = (error: any) => {
+    let alertMessage;
+    if (typeof error === 'string') {
+        alertMessage = error;
+    } else if (error.message) {
+        alertMessage = error.message;
+    } else if (error.error) {
+        alertMessage = error.error;
+    } else {
+        alertMessage = 'Error while processing request, please try again later';
+    }
+    return alertMessage;
+};
 const WalletContainer: React.FC<{
     ConnectorList: Array<IWalletInfo>,
     history: any
     infuraApiKey: string,
     alchemyApiKey: string,
     submitUrl: string,
-    item: any,
+    item: Object,
     successRedirectionUrl: string,
     clientId: string,
     connectIfAccountHasBalance: boolean;
@@ -23,183 +34,294 @@ const WalletContainer: React.FC<{
     enableCustomRpc: boolean,
     enableAdvancedOptions: boolean,
     successParams: Array<{ field: string, key: string }>
-}> = ({ ConnectorList, submitUrl, item, successRedirectionUrl, enableCustomRpc, connectIfAccountHasBalance, enableAdvancedOptions, infuraApiKey, alchemyApiKey, successParams, history, ...rest }) => {
-    const [account, setAccount] = useState<any>();
-    const [address, setAddress] = useState<any>();
-    const [selectedWallet, setSelectedWallet] = useState<IWalletInfo>();
-    const [selectedNetworkChain, setSelectedNetworkChain] = useState<IChain>();
-    const [error, setError] = useState('');
-    const [showError, setShowError] = useState(false);
+    location?: any;
+    authKey: string;
+}> = ({
+    ConnectorList,
+    submitUrl,
+    item = {},
+    successRedirectionUrl,
+    enableCustomRpc,
+    connectIfAccountHasBalance,
+    enableAdvancedOptions,
+    infuraApiKey,
+    clientId,
+    clientSecret,
+    authKey,
+    alchemyApiKey,
+    successParams,
+    history,
+    location }) => {
+        const [viewState, setViewState] = useState<{
+            message: string,
+            showMessage: boolean,
+            selectedNetworkChain?: IChain,
+            selectedWallet?: IWalletInfo,
+            address?: IAccount;
+            account?: IAccount,
+            color: string;
+            success: boolean;
+            accounts: Array<IAccount>;
+            addresses?: Array<IAccount>;
+            user?: any;
+            token?: any;
+        }>({ message: '', showMessage: false, color: 'danger', success: false, accounts: [] });
 
-    const onConnectToWalletClick = async (chain: IChain) => {
-        setSelectedNetworkChain(chain);
-        if (chain.isCustom) {
-            setAccount({ id: chain.addressId, account: chain.addressId });
-            setAddress({ id: chain.addressId, address: chain.addressId })
-        }
-        if (chain) {
-            const wl: IWalletInfo = {
-                key: 'custom', title: 'Custom',
-                type: 'ethereum',
-                link: '',
-                description: 'Connect to your own Wallet with RPC',
-                logo: '',
-                args: {
-                    chainId: chain?.chainId,
-                    network: chain?.network,
-                    urls: chain?.rpc,
-                    url: chain?.rpc[0],
-                }
-            }
-            setSelectedWallet(wl);
-            await getAccountInfo(wl);
-        }
-    }
+        const { message, success, color, showMessage, selectedNetworkChain, selectedWallet, address, account, accounts, user, token } = viewState;
+        const { search } = location || {};
 
-    const getAccountInfo = async (wallet: IWalletInfo) => {
-        if (wallet) {
-            if (wallet.key === 'metamask' || wallet.key === 'injected') {
-                if (typeof window.ethereum === 'undefined') {
-                    window.location.href = 'https://metamask.io/download.html';
-                    return;
-                }
-            }
-            try {
-                setShowError(false);
-                const conObj: any = ConnectProvider(wallet);
-                if (conObj) {
-                    const response = await conObj.activate();
-                    const account = response.account ? response.account : await conObj.getAccount();
-                    const provider = response.provider ? response.provider : await conObj.getProvider();
-                    const web3 = new Web3(provider);
-                    const addressId = account ? typeof account == 'string' ? account : account[0] : '';
-                    if (addressId) {
-                        if (connectIfAccountHasBalance) {
-                            let balance: any = await web3.eth.getBalance(addressId);
-                            if (typeof balance === 'string') {
-                                balance = parseInt(balance, 10);
-                            }
-                            if (!isNaN(balance)) {
-                                if (balance > 0) {
-                                    setAccount({ id: account, account: account, balance });
-                                    setAddress({ id: account, address: account })
-                                    await response.deactivate();
-                                } else {
-                                    const address = typeof account === 'string' ? account : '';
-                                    setError(`${wallet.title} Wallet account has balance of ${balance}, try another wallet or try adding funds to the wallet address: ${address}`);
-                                    setShowError(true);
-                                }
-                            }
-                        } else {
-                            setAccount({ id: account, account: account });
-                            setAddress({ id: account, address: account })
-                            await response.deactivate();
-                        }
-                        if (wallet.key === 'custom') {
-                            if (account) {
-                                setAccount({ id: account, account: account });
-                                setAddress({ id: account, address: account })
-                                await response.deactivate();
-                                setError(`We did not check ${wallet.title} Wallet account balance, minting will fail if wallet doesn't have sufficient funds.`);
-                                setShowError(true);
-                            } else {
-                                setError(`${wallet.title} account information not available form the connections or network may be not compatible, please provide other RPC info or select another wallet.`);
-                                setShowError(true);
+        /** Coinbase */
+        useEffect(() => {
+            const load = async () => {
+                if (search.includes('code')) {
+                    console.log('inside Search');
+                    try {
+                        const coinbase: any = ConnectorList.find(f => f.key === 'coinbase');
+                        if (coinbase) {
+                            const { args } = coinbase;
+                            const provider = new CoinbaseProvider({ ...args, clientId, clientSecret });
+                            const response: any = await provider.activate();
+                            const { accounts, user, ...rest } = response;
+                            if (accounts) {
+                                setViewState(viewState => {
+                                    return {
+                                        ...viewState,
+                                        selectedWallet: coinbase,
+                                        message: (!accounts || (accounts && accounts.length === 0)) ? 'No Account connected, Please check with Coinbase ' : 'Select Account and Address to Use',
+                                        success: accounts && accounts.length === 1 && accounts[0],
+                                        showMessage: true,
+                                        color: 'success',
+                                        account: accounts && accounts.length === 1 && accounts[0] ? accounts[0] : undefined,
+                                        accounts: accounts ? accounts : [],
+                                        user: user,
+                                        token: rest
+                                    }
+                                });
                             }
                         }
-                    } else {
-                        setError(`Failed to load accounts for ${wallet.title}, try another wallet`);
-                        setShowError(true);
-                    }
-                }
-            } catch (error) {
-                setError(error);
-                setShowError(true);
-            }
-        }
-    };
-
-    const processAccount = async (account: any, address: any) => {
-        if (submitUrl) {
-            const data = {
-                ...item,
-                walletAccount: account,
-                walletAddress: address,
-                walletType: selectedWallet ? selectedWallet.type : 'Custom'
-            };
-            if (selectedNetworkChain) {
-                data.networkName = selectedNetworkChain.name;
-                data.networkChainId = selectedNetworkChain.chainId;
-                data.networkChain = selectedNetworkChain.chain;
-                data.networkType = selectedNetworkChain.network;
-                data.networkRpc = selectedNetworkChain.rpc;
-                data.networkFaucets = selectedNetworkChain.faucets;
-                data.networkNativeCurrency = selectedNetworkChain.nativeCurrency;
-                data.networkExplorers = selectedNetworkChain.explorers;
-            }
-
-            try {
-                await post(submitUrl, data, rest);
-                if (successRedirectionUrl) {
-                    let url = successRedirectionUrl;
-                    if (successParams) {
-                        successParams.forEach((param: any, index: number) => {
-                            if (param.field && param.key) {
-                                const val = data[param.field];
-                                if (val) {
-                                    url = `${url}${index === 0 ? `/${param.key}=${val}` : `&${param.key}=${val}`}`;
-                                }
+                    } catch (error: any) {
+                        setViewState(viewState => {
+                            return {
+                                ...viewState,
+                                message: handleError(error),
+                                color: 'danger',
+                                showMessage: true
                             }
                         });
                     }
-                    if (history) {
-                        history.push(url);
-                    } else {
-                        window.location.href = url;
-                    }
-                } else {
-                    if (history) {
-                        history.push('/');
-                    } else {
-                        window.location.href = '/';
+                }
+            }
+            if (search) {
+                load();
+            }
+        }, [ConnectorList, clientId, clientSecret, search]);
+
+        const getAccountInfo = useCallback(async (wallet: IWalletInfo) => {
+            if (wallet) {
+                const { args, key } = wallet;
+                if (key === 'metamask' || key === 'injected') {
+                    if (typeof window.ethereum === 'undefined') {
+                        window.location.href = 'https://metamask.io/download.html';
+                        return;
                     }
                 }
-            } catch (error) {
-                setError(error);
-                setShowError(true);
-            }
-        }
 
-    };
-    const args: any = selectedWallet && selectedWallet.args ? selectedWallet.args : {}
-    return (
-        <div>
-            {showError && <div className="danger ion-padding">
-                {error}
-                <div className="text-white pointer ion-float-right" onClick={() => setShowError(false)} >&times;</div>
-            </div>}
-            {selectedWallet && selectedWallet.key !== 'coinbase' && <div className="ion-margin">Your wallet, {selectedWallet && <span>powered by <a href={selectedWallet.link} target="_blank" rel="nofollow noopener noreferrer">{selectedWallet.title}</a>, </span>} will be used to securely store your digital goods and cryptocurrencies.</div>}
-            {selectedWallet && selectedWallet.key === 'coinbase' && <CoinBasePage {...rest} {...args} onChangeWallet={() => setSelectedWallet(undefined)} onContinue={processAccount} />}
-            <div className="wallet-list ion-margin-vertical">
-                {ConnectorList && ConnectorList.map((connector, index) => <div onClick={() => {
-                    setSelectedWallet(connector);
-                    getAccountInfo(connector);
-                }} className="wallet-item" key={`wallet_map_${index}_${connector.key}`} >
-                    <div className="wallet-item-img-slot">
-                        <img src={connector.logo} alt={connector.title} />
-                    </div>
-                    <div className="wallet-item-caption-slot">
-                        <p>{connector.description}</p>
+                if (key === 'coinbase' || key === 'coinbase') {
+                    const { dAppId, scope, callbackUrl } = args || {};
+                    const redirect_uri = window.origin.includes('capacitor://') ? 'urn:ietf:wg:oauth:2.0:oob' : `${window.location.host}${callbackUrl}`;
+                    window.location.href = `https://www.coinbase.com/oauth/authorize?response_type=code&client_id=${dAppId}&redirect_uri=${window.location.protocol}//${redirect_uri}&scope=${scope}`;
+                    return;
+                }
+                try {
+                    const conObj = ConnectProvider(wallet);
+                    if (conObj) {
+                        const response = await conObj.activate();
+                        const { accounts } = response;
+                        const account = accounts && accounts.length === 1 && accounts[0] ? accounts[0] : undefined;
+                        let error = '';
+                        let balance: any = 0;
+                        if (account) {
+                            balance = account.balance;
+                            if (typeof balance === 'string') {
+                                balance = Number(balance);
+                            }
+                            if (wallet.key === 'custom') {
+                                if (!account) {
+                                    error = `${wallet.title} account information not available form the connections or network may be not compatible, please provide other RPC info or select another wallet.`;
+                                }
+                            }
+
+                        }
+                        setViewState(viewState => {
+                            return {
+                                ...viewState,
+                                selectedWallet: wallet,
+                                message: error ? error : ((!accounts || (accounts && accounts.length === 0)) ? 'No Account connected, Please check with Coinbase ' : 'Select Account and Address to Use'),
+                                success: !error && accounts && accounts.length === 1 && accounts[0] ? true : false,
+                                showMessage: true,
+                                color: error ? 'danger' : 'success',
+                                account,
+                                address: account
+                            }
+                        });
+                    }
+                } catch (error: any) {
+                    setViewState(viewState => {
+                        return {
+                            ...viewState,
+                            message: 'An error occurred while connecting to wallet',
+                            showMessage: true
+                        }
+                    });
+                }
+            }
+        }, []);
+
+        const onConnectToWalletClick = useCallback(async (chain: IChain) => {
+            if (chain) {
+                const wl: IWalletInfo = {
+                    key: 'custom',
+                    title: 'Custom',
+                    type: 'ethereum',
+                    link: '',
+                    description: 'Connect to your own Wallet with RPC',
+                    logo: '',
+                    args: {
+                        chainId: chain?.chainId,
+                        network: chain?.network,
+                        urls: chain?.rpc,
+                        url: chain?.rpc[0],
+                    }
+                }
+                setViewState(viewState => {
+                    return {
+                        ...viewState,
+                        selectedNetworkChain: chain,
+                        selectedWallet: wl,
+                        account: { id: chain.addressId || '', name: chain.addressId || '' },
+                        address: { id: chain.addressId || '', name: chain.addressId || '' }
+                    };
+                });
+                await getAccountInfo(wl);
+            }
+        }, [getAccountInfo]);
+
+        const processAccount = async () => {
+            if (submitUrl && account) {
+                const data = {
+                    ...item,
+                    connectedWallet: selectedWallet,
+                    connectedNetwork: selectedNetworkChain,
+                    walletAccount: account,
+                    walletAddress: address,
+                    walletType: selectedWallet ? selectedWallet.title : 'Custom',
+                    blockChain: selectedWallet ? selectedWallet.type : 'Custom',
+                    address: account.id,
+                    user,
+                    token
+                };
+                try {
+                    await post(submitUrl, data, { clientId, clientSecret, authKey });
+                    if (successRedirectionUrl) {
+                        let url = successRedirectionUrl;
+                        if (successParams) {
+                            successParams.forEach((param: any, index: number) => {
+                                if (param.field && param.key) {
+                                    const val = data[param.field];
+                                    if (val) {
+                                        url = `${url}${index === 0 ? `/${param.key}=${val}` : `&${param.key}=${val}`}`;
+                                    }
+                                }
+                            });
+                        }
+                        if (history) {
+                            history.push(url);
+                        } else {
+                            window.location.href = url;
+                        }
+                    } else {
+                        if (history) {
+                            history.goBack();
+                        } else {
+                            window.location.href = '/';
+                        }
+                    }
+                } catch (error: any) {
+                    setViewState(viewState => {
+                        return {
+                            ...viewState,
+                            error: handleError(error),
+                            showMessage: true
+                        }
+                    });
+                }
+            }
+        };
+
+        const toggleError = useCallback(() => {
+            setViewState(viewState => {
+                return { ...viewState, showMessage: !viewState.showMessage };
+            })
+        }, []);
+
+        const setWallet = useCallback((wallet) => {
+            setViewState(viewState => {
+                return { ...viewState, selectedWallet: wallet };
+            })
+        }, []);
+
+        const onAccountSelect = useCallback(async (e) => {
+            setViewState((viewState) => {
+                const account: any = viewState.accounts.find((f: any) => f.id === e.target.value);
+                return { ...viewState, account, success: true, showMessage: true, message: `Successfully Connected, Please click on Continue to map the wallet.` };
+            });
+
+        }, []);
+
+        return (
+            <div>
+                {showMessage && <div className={`${color} ion-padding`}>
+                    {message}
+                    {connectIfAccountHasBalance && <span>{selectedWallet ? selectedWallet.title : 'Your '} account information not available form the connections or network may be not compatible, please provide other RPC info or select another wallet.</span>}
+                    <div className="text-white pointer ion-float-right" onClick={toggleError} >&times;</div>
+                </div>}
+                {!success && selectedWallet && <div className="ion-margin">Your wallet, {selectedWallet && <span>powered by <a href={selectedWallet.link} target="_blank" rel="nofollow noopener noreferrer">{selectedWallet.title}</a>, </span>} will be used to securely store your digital goods and cryptocurrencies.</div>}
+                {accounts && accounts.length > 1 && <div className="margin-vertical">
+                    <div>
+                        <div className="wallet-label">
+                            <label className="text-primary"> Select  Account </label>
+                        </div>
+                        <div className="wallet-control">
+                            <select value={account ? account.id : ''} onChange={onAccountSelect}>
+                                <option value="" disabled>Select Account</option>
+                                {accounts.map((acc: IAccount) => <option key={acc.id} value={acc.id}>
+                                    {acc.name} {acc.balance ? (typeof acc.balance === 'object' ? `- ${acc.balance.amount}` : `-${acc.balance}`) : ''}
+                                </option>)}
+                            </select>
+                        </div>
                     </div>
                 </div>
-                )}
+                }
+                <div className='margin-vertical wallet-control'>
+                    {success && account && <button className='primary' color="primary" onClick={processAccount}>Continue</button>}
+                </div>
+                {accounts.length < 1 && <div className="wallet-list margin-vertical">
+                    {ConnectorList && ConnectorList.map((connector, index) => <div onClick={() => {
+                        setWallet(connector);
+                        getAccountInfo(connector);
+                    }} className="wallet-item" key={`wallet_map_${index}_${connector.key}`} >
+                        <div className="wallet-item-img-slot">
+                            <img src={connector.logo} alt={connector.title} />
+                        </div>
+                        <div className="wallet-item-caption-slot">
+                            <p>{connector.description}</p>
+                        </div>
+                    </div>
+                    )}
+                </div>
+                }
+                {accounts.length < 1 && enableAdvancedOptions && <NetworkPicker enableCustomRpc={enableCustomRpc} infuraApiKey={infuraApiKey} alchemyApiKey={alchemyApiKey} onChange={(chain: IChain) => onConnectToWalletClick(chain)} />}
             </div>
-            {enableAdvancedOptions && <NetworkPicker enableCustomRpc={enableCustomRpc} infuraApiKey={infuraApiKey} alchemyApiKey={alchemyApiKey} onChange={(chain: IChain) => onConnectToWalletClick(chain)} />}
-
-            <div>
-                {account && <IonButton fill="outline" expand="block" color="primary" size="small" onClick={() => processAccount(account, address)}>Continue</IonButton>}
-            </div>
-        </div>
-    )
-}
+        )
+    }
 export default WalletContainer;

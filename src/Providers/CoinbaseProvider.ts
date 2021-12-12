@@ -1,5 +1,5 @@
 import { post } from '@wholelot/util/lib/fetchHelper';
-export class CoinbaseProvider {
+class CoinbaseProvider {
     props: any;
     constructor(props: any) {
         this.props = props;
@@ -8,9 +8,9 @@ export class CoinbaseProvider {
 
     activate = async () => {
         try {
-            const { dAppId, scope, oAuthUrl, clientId, clientSecret, authKey } = this.props;
+            const { dAppId, scope, oAuthUrl, clientId, clientSecret, authKey, callbackUrl } = this.props;
             const split = window.location.href.split('code=');
-            const redirect_uri = window.origin.includes('capacitor://') ? 'urn:ietf:wg:oauth:2.0:oob' : `${window.location.host}/wallet`;
+            const redirect_uri = window.origin.includes('capacitor://') ? 'urn:ietf:wg:oauth:2.0:oob' : `${window.location.host}${callbackUrl}`;
             if (split && split[1]) {
                 const code = split[1];
                 if (code) {
@@ -34,7 +34,7 @@ export class CoinbaseProvider {
                                 saveObjName: 'accounts',
                             }
                         ],
-                        redirect_uri: `http://${redirect_uri}`
+                        redirect_uri: `${window.location.protocol}//${redirect_uri}`
                     };
                     const results = await post(oAuthUrl, data, { clientId, clientSecret, authKey });
                     if (results) {
@@ -44,7 +44,7 @@ export class CoinbaseProvider {
                 }
             }
         } catch (error: any) {
-            throw new Error(error);
+            throw error;
         }
     };
 
@@ -75,3 +75,4 @@ export class CoinbaseProvider {
         }
     };
 }
+export default CoinbaseProvider;

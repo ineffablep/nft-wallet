@@ -1,6 +1,4 @@
-/* eslint-disable no-template-curly-in-string */
-import { IonButton, IonInput, IonItem, IonLabel, IonToggle, useIonPicker } from '@ionic/react';
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 
 export interface IChain {
     name: string,
@@ -44,7 +42,6 @@ const NetworkPicker: React.FC<{ alchemyApiKey: string, enableCustomRpc: boolean,
     const [customChainId, setCustomChainId] = useState('');
     const [customAddressId, setCustomAddressId] = useState('');
     const [customNetworkName, setCustomNetworkName] = useState('');
-    const [present] = useIonPicker();
 
     useEffect(() => {
         async function loadDaa() {
@@ -54,7 +51,7 @@ const NetworkPicker: React.FC<{ alchemyApiKey: string, enableCustomRpc: boolean,
                 const json = await response.json();
                 const networkNames: Array<string> = [];
                 json.forEach((chain: IChain) => {
-                    if (!networkNames.includes(chain.network)) {
+                    if (networkNames.includes(chain.network)) {
                         networkNames.push(chain.network);
                     }
                     if (chain) {
@@ -111,91 +108,89 @@ const NetworkPicker: React.FC<{ alchemyApiKey: string, enableCustomRpc: boolean,
 
     return (
         <div>
-            {!showCustomNetworkOption && <IonButton
-                expand="block"
-                fill="default"
-                onClick={() =>
-                    present(
-                        [
-                            {
-                                name: 'network',
-                                options: networks.map((m: any) => { return { text: m, value: m, selected: m === selectedNetwork } })
-                            }
-                        ],
-                        [
-                            {
-                                text: 'Confirm',
-                                handler: (selected) => {
-                                    onNetworkSelect(selected.network.value);
-                                },
-                            },
-                        ]
-                    )
-                }
-            >
-                {selectedNetwork ? selectedNetwork : 'Select Network'}
-            </IonButton>}
-            {!showCustomNetworkOption && <IonButton
-                expand="block"
-                fill="default"
-                onClick={() =>
-                    present(
-                        [
-                            {
-                                name: 'chain',
-                                options: filterChains
-                            },
-                        ],
-                        [
-                            {
-                                text: 'Confirm',
-                                handler: (selected) => {
-                                    onChainSelect(selected.chain.value);
-                                },
-                            },
-                        ]
-                    )
-                }
-            >
-                {selectedChain ? selectedChain : 'Select Chain'}
-            </IonButton>}
-            {enableCustomRpc && <IonItem className="ion-margin-vertical">
-                <IonLabel color="primary"> Custom RPC Config</IonLabel>
-                <IonToggle checked={showCustomNetworkOption} onIonChange={e => setShowCustomNetworkOption(e.detail.checked)} />
-            </IonItem>}
+            {showCustomNetworkOption && <div className="margin-vertical">
+                <div className="wallet-label">
+                    <label className="text-primary"> Select Network</label>
+                </div>
+                <div className="wallet-control">
+                    <select onChange={onNetworkSelect} value={selectedNetwork}>
+                        {networks.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                </div>
+            </div>
+            }
+            {showCustomNetworkOption && <div className="margin-vertical">
+                <div className="wallet-label">
+                    <label className="text-primary"> Select Chain</label>
+                </div>
+                <div className="wallet-control">
+                    <select onChange={onChainSelect} value={selectedChain}>
+                        {filterChains.map(m => <option key={m.value} value={m.value}>{m.text}</option>)}
+                    </select>
+                </div>
+            </div>
+            }
+
+            {enableCustomRpc && <div className="margin-vertical">
+                <div className="wallet-label">
+                    <label className="text-primary"> Custom RPC Config</label>
+                </div>
+                <div className="wallet-control">
+                    <input type="checked" checked={showCustomNetworkOption} onChange={e => setShowCustomNetworkOption(e.target.checked)} />
+                </div>
+            </div>
+            }
             {showCustomNetworkOption && <div>
-                <IonItem>
-                    <IonLabel color="primary"> Enter Network URL</IonLabel>
-                    <IonInput value={customNetworkUrl} type='url' inputMode="url" placeholder="RPC URL" onIonChange={(e) => setCustomNetworkUrl(e.detail.value!)} />
-                </IonItem>
-                <IonItem>
-                    <IonLabel color="primary"> Enter Network Name</IonLabel>
-                    <IonInput value={customNetworkName} type="text" inputMode="text" placeholder="Network Name - mainnet,testnet" onIonChange={(e) => setCustomNetworkName(e.detail.value!)} />
-                </IonItem>
-                <IonItem>
-                    <IonLabel color="primary"> Enter Chain Id</IonLabel>
-                    <IonInput value={customChainId} type="number" placeholder="Chain ID number" onIonChange={(e) => setCustomChainId(e.detail.value!)} />
-                </IonItem>
-                <IonItem>
-                    <IonLabel color="primary"> Enter Address Id</IonLabel>
-                    <IonInput value={customAddressId} type="text" placeholder="Address Id" onIonChange={(e) => setCustomAddressId(e.detail.value!)} />
-                </IonItem>
-                <IonItem>
-                    <IonButton fill="default"
+                <div className="margin-vertical">
+                    <div className="wallet-label">
+                        <label color="primary"> Enter Network URL</label>
+                    </div>
+                    <div className="wallet-control">
+                        <input value={customNetworkUrl} type='url' inputMode="url" placeholder="RPC URL" onChange={(e) => setCustomNetworkUrl(e.target.value)} />
+                    </div>
+                </div>
+                <div className="margin-vertical">
+                    <div className="wallet-label">
+                        <label color="primary"> Enter Network Name</label>
+                    </div>
+                    <div className="wallet-control">
+                        <input value={customNetworkName} type="text" inputMode="text" placeholder="Network Name - mainnet,testnet" onChange={(e) => setCustomNetworkName(e.target.value)} />
+                    </div>
+                </div>
+                <div className="margin-vertical">
+                    <div className="wallet-label">
+                        <label color="primary"> Enter Chain Id</label>
+                    </div>
+                    <div className="wallet-control">
+                        <input value={customChainId} type="number" placeholder="Chain ID number" onChange={(e) => setCustomChainId(e.target.value)} />
+                    </div>
+                </div>
+                <div className="margin-vertical">
+                    <div className="wallet-label">
+                        <label color="primary"> Enter Address Id</label>
+                    </div>
+                    <div className="wallet-control">
+                        <input value={customAddressId} type="text" placeholder="Address Id" onChange={(e) => setCustomAddressId(e.target.value)} />
+                    </div>
+                </div>
+                <div className="margin-vertical wallet-control">
+                    <button
+                        className='primary'
                         onClick={() => {
                             const obj = {
+                                network: selectedNetwork,
                                 name: customNetworkName,
                                 rpc: [customNetworkUrl],
                                 chainId: customChainId,
-                                networkId: customChainId,
+                                networkId: customChainId || selectedNetwork,
                                 addressId: customAddressId,
                                 isCustom: true
                             };
                             if (onChange) {
                                 onChange(obj);
                             }
-                        }} >Confirm Custom Config</IonButton>
-                </IonItem>
+                        }} >Confirm Custom Config</button>
+                </div>
             </div>}
         </div>
     )

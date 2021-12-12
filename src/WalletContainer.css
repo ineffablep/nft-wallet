@@ -187,3 +187,23 @@ ion-tabs ion-tab-bar ion-tab-button ion-label {
     background: var(--ion-color-step-850, #27323e);
     color: var(--ion-item-background, #fff);
 }
+
+.wallet-control select,
+.wallet-control input,
+.wallet-control button {
+    background: var(--background-color);
+    padding: 8px;
+}
+
+.margin-vertical {
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.text-primary {
+    color: var(--color-primary);
+}
+
+.wallet-label {
+    margin: 4px 0;
+}
