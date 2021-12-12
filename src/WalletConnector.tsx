@@ -4,7 +4,7 @@ import ConnectProvider from './ConnectProvider';
 import NetworkPicker, { IChain } from './NetworkPicker';
 import CoinbaseProvider from './Providers/CoinbaseProvider';
 import { IWalletInfo, IAccount } from './types';
-import './WalletContainer.css';
+import './WalletConnector.css';
 
 declare var window: any;
 export const handleError = (error: any) => {
@@ -20,7 +20,8 @@ export const handleError = (error: any) => {
     }
     return alertMessage;
 };
-const WalletContainer: React.FC<{
+
+const WalletConnector: React.FC<{
     ConnectorList: Array<IWalletInfo>,
     history: any
     infuraApiKey: string,
@@ -324,4 +325,4 @@ const WalletContainer: React.FC<{
             </div>
         )
     }
-export default WalletContainer;
+export default WalletConnector;

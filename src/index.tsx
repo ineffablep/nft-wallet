@@ -1,4 +1,4 @@
-import WalletContainer from './WalletContainer';
-export default {
-    wallet: WalletContainer
+import WalletConnector from './WalletConnector';
+export {
+    WalletConnector
 }
