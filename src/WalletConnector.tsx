@@ -88,7 +88,8 @@ const WalletConnector: React.FC<{
                                     return {
                                         ...viewState,
                                         selectedWallet: coinbase,
-                                        message: (!accounts || (accounts && accounts.length === 0)) ? 'No Account connected, Please check with Coinbase ' : 'Select Account and Address to Use',
+                                        message: (!accounts || (accounts && accounts.length === 0)) ? 'No Account connected, Please check with Coinbase '
+                                            : (accounts && accounts.length === 1 ? 'Successfully Connected, Please click on Continue to map the wallet' : 'Select Account and Address to Use'),
                                         success: accounts && accounts.length === 1 && accounts[0],
                                         showMessage: true,
                                         color: 'success',
@@ -157,7 +158,7 @@ const WalletConnector: React.FC<{
                             return {
                                 ...viewState,
                                 selectedWallet: wallet,
-                                message: error ? error : ((!accounts || (accounts && accounts.length === 0)) ? 'No Account connected, Please check with Coinbase ' : 'Select Account and Address to Use'),
+                                message: error ? error : ((!accounts || (accounts && accounts.length === 0)) ? 'No Account connected, Please check with Coinbase ' : (accounts && accounts.length === 1 ? 'Successfully Connected, Please click on Continue to map the wallet' : 'Select Account and Address to Use')),
                                 success: !error && accounts && accounts.length === 1 && accounts[0] ? true : false,
                                 showMessage: true,
                                 color: error ? 'danger' : 'success',
@@ -274,7 +275,7 @@ const WalletConnector: React.FC<{
         const onAccountSelect = useCallback(async (e) => {
             setViewState((viewState) => {
                 const account: any = viewState.accounts.find((f: any) => f.id === e.target.value);
-                return { ...viewState, account, success: true, showMessage: true, message: `Successfully Connected, Please click on Continue to map the wallet.` };
+                return { ...viewState, account, success: true, showMessage: true, message: `Successfully Connected, Please click on Continue to map the wallet` };
             });
 
         }, []);

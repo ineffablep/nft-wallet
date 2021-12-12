@@ -5,7 +5,7 @@ class BitskiProvider extends BaseProvider {
 
     activate = async () => {
         const Bitski = require('bitski').Bitski;
-        const bitski = new Bitski(this.walletInfo.args?.dAppId, window.location.href + '/bitski_callback');
+        const bitski = new Bitski(this.walletInfo.args?.dAppId, `${window.location.protocol}//${window.location.host}${this.walletInfo.args?.callbackUrl}`);
         const provider = bitski.getProvider();
         this.web3 = new Web3(provider);
         // connect via oauth to use the wallet (call this from a click handler)

@@ -29,7 +29,7 @@ class BaseProvider implements IProvider {
             const accounts = await this.web3.eth.getAccounts();
             if (accounts) {
                 for (const acc of accounts) {
-                    const balance = await this.getBalance();
+                    const balance = await this.getBalance(acc);
                     accList.push({
                         id: acc,
                         name: acc,
