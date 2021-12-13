@@ -8,8 +8,13 @@ class BaseProvider implements IProvider {
     web3: Web3 | null = null;
     walletInfo: IWalletInfo;
     chainId = '1';
-    constructor(walletInfo: IWalletInfo) {
+    props: any;
+    constructor(walletInfo: IWalletInfo, props: any = {}) {
         this.walletInfo = walletInfo;
+        this.props = props;
+    }
+    signin(): void {
+        throw new Error('Method not implemented.');
     }
     activate(): Promise<{ accounts: { id: string; name: string; balance?: string | number | { amount: string | number; currency: string | number; } | undefined; }[]; chainId: string | number; provider: any; }> {
         throw new Error('Method not implemented.');

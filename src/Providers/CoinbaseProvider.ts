@@ -1,14 +1,10 @@
 import { post } from '@wholelot/util/lib/fetchHelper';
-class CoinbaseProvider {
-    props: any;
-    constructor(props: any) {
-        this.props = props;
-
-    }
-
+import BaseProvider from './BaseProvider';
+class CoinbaseProvider extends BaseProvider {
     activate = async () => {
         try {
-            const { dAppId, scope, oAuthUrl, clientId, clientSecret, authKey, callbackUrl } = this.props;
+            const { dAppId, scope, callbackUrl, oAuthUrl } = this.walletInfo.args || {};
+            const { clientId, clientSecret, authKey } = this.props;
             const split = window.location.href.split('code=');
             const redirect_uri = window.origin.includes('capacitor://') ? 'urn:ietf:wg:oauth:2.0:oob' : `${window.location.host}${callbackUrl}`;
             if (split && split[1]) {
@@ -36,11 +32,10 @@ class CoinbaseProvider {
                         ],
                         redirect_uri: `${window.location.protocol}//${redirect_uri}`
                     };
-                    const results = await post(oAuthUrl, data, { clientId, clientSecret, authKey });
-                    if (results) {
-                        localStorage.setItem('coinbase-user', JSON.stringify(results));
+                    if (oAuthUrl) {
+                        const results = await post(oAuthUrl, data, { clientId, clientSecret, authKey });
+                        return results;
                     }
-                    return results;
                 }
             }
         } catch (error: any) {

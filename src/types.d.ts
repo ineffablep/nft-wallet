@@ -12,6 +12,7 @@ export interface IProvider {
         chainId: string | number
         provider: any
     }>;
+    signin(): void;
     deactivate(): void;
     getChainId(): Promise<number | string>;
     getAccounts(): Promise<Array<IAccount>>;
@@ -45,5 +46,6 @@ export interface IWalletInfo {
         dAppUrl?: string;
         dAppSecret?: string;
         callbackUrl?: string;
+        oAuthUrl?: string;
     }
 }

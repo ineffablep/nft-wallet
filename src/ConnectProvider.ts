@@ -5,28 +5,32 @@ import PortisProvider from './Providers/PortisProvider';
 import RpcWalletProvider from './Providers/RpcWalletProvider';
 import CustomProvider from './Providers/CustomProvider';
 import MetaMaskProvider from './Providers/MetaMaskProvider';
+import CoinbaseProvider from './Providers/CoinbaseProvider';
 import { IWalletInfo } from './types';
-const ConnectionProvider = (e: IWalletInfo) => {
+const ConnectionProvider = (e: IWalletInfo, props: any) => {
     switch (e.key) {
         case 'metamask':
         case 'injected': {
-            return new MetaMaskProvider(e);
+            return new MetaMaskProvider(e, props);
         }
         case 'bitski': {
-            return new BitskProvider(e);
+            return new BitskProvider(e, props);
         }
         case 'portis': {
-            return new PortisProvider(e);
+            return new PortisProvider(e, props);
         }
         case 'dapper': {
-            return new DapperProvider(e);
+            return new DapperProvider(e, props);
         }
         case 'kaikas': {
-            return new KaikasProvider(e);
+            return new KaikasProvider(e, props);
         }
         case 'walletConnect':
         case 'rpc': {
-            return new RpcWalletProvider(e);
+            return new RpcWalletProvider(e, props);
+        }
+        case 'coinbase': {
+            return new CoinbaseProvider(e, props);
         }
         case 'custom': {
             return new CustomProvider(e);

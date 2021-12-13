@@ -2,7 +2,6 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { post } from '@wholelot/util/lib/fetchHelper';
 import ConnectProvider from './ConnectProvider';
 import NetworkPicker, { IChain } from './NetworkPicker';
-import CoinbaseProvider from './Providers/CoinbaseProvider';
 import { IWalletInfo, IAccount } from './types';
 import './WalletConnector.css';
 
@@ -75,30 +74,32 @@ const WalletConnector: React.FC<{
         useEffect(() => {
             const load = async () => {
                 if (search.includes('code')) {
-                    console.log('inside Search');
+                    const key = localStorage.getItem('wl-wallet-key');
+                    const wallet: any = ConnectorList.find(f => f.key === key);
                     try {
-                        const coinbase: any = ConnectorList.find(f => f.key === 'coinbase');
-                        if (coinbase) {
-                            const { args } = coinbase;
-                            const provider = new CoinbaseProvider({ ...args, clientId, clientSecret });
-                            const response: any = await provider.activate();
-                            const { accounts, user, ...rest } = response;
-                            if (accounts) {
-                                setViewState(viewState => {
-                                    return {
-                                        ...viewState,
-                                        selectedWallet: coinbase,
-                                        message: (!accounts || (accounts && accounts.length === 0)) ? 'No Account connected, Please check with Coinbase '
-                                            : (accounts && accounts.length === 1 ? 'Successfully Connected, Please click on Continue to map the wallet' : 'Select Account and Address to Use'),
-                                        success: accounts && accounts.length === 1 && accounts[0],
-                                        showMessage: true,
-                                        color: 'success',
-                                        account: accounts && accounts.length === 1 && accounts[0] ? accounts[0] : undefined,
-                                        accounts: accounts ? accounts : [],
-                                        user: user,
-                                        token: rest
-                                    }
-                                });
+                        if (wallet) {
+                            const conObj = ConnectProvider(wallet, { clientId, clientSecret, authKey });
+                            if (conObj) {
+                                const response: any = await conObj.activate();
+                                const { accounts, user, provider, ...rest } = response;
+                                await conObj.deactivate();
+                                if (accounts) {
+                                    setViewState(viewState => {
+                                        return {
+                                            ...viewState,
+                                            selectedWallet: wallet,
+                                            message: (!accounts || (accounts && accounts.length === 0)) ? 'No Account connected, Please check with Coinbase '
+                                                : (accounts && accounts.length === 1 ? 'Successfully Connected, Please click on Continue to map the wallet' : 'Select Account and Address to Use'),
+                                            success: accounts && accounts.length === 1 && accounts[0],
+                                            showMessage: true,
+                                            color: 'success',
+                                            account: accounts && accounts.length === 1 && accounts[0] ? accounts[0] : undefined,
+                                            accounts: accounts ? accounts : [],
+                                            user: user,
+                                            token: rest
+                                        }
+                                    });
+                                }
                             }
                         }
                     } catch (error: any) {
@@ -112,6 +113,7 @@ const WalletConnector: React.FC<{
                         });
                     }
                 }
+
             }
             if (search) {
                 load();
@@ -128,15 +130,19 @@ const WalletConnector: React.FC<{
                     }
                 }
 
-                if (key === 'coinbase' || key === 'coinbase') {
+                if (key === 'coinbase') {
                     const { dAppId, scope, callbackUrl } = args || {};
                     const redirect_uri = window.origin.includes('capacitor://') ? 'urn:ietf:wg:oauth:2.0:oob' : `${window.location.host}${callbackUrl}`;
                     window.location.href = `https://www.coinbase.com/oauth/authorize?response_type=code&client_id=${dAppId}&redirect_uri=${window.location.protocol}//${redirect_uri}&scope=${scope}`;
                     return;
                 }
                 try {
-                    const conObj = ConnectProvider(wallet);
+                    const conObj = ConnectProvider(wallet, { clientId, clientSecret, authKey });
                     if (conObj) {
+                        if (key === 'bitski') {
+                            conObj.signin();
+                            return;
+                        }
                         const response = await conObj.activate();
                         const { accounts } = response;
                         const account = accounts && accounts.length === 1 && accounts[0] ? accounts[0] : undefined;
@@ -154,6 +160,7 @@ const WalletConnector: React.FC<{
                             }
 
                         }
+                        await conObj.deactivate();
                         setViewState(viewState => {
                             return {
                                 ...viewState,
@@ -177,7 +184,7 @@ const WalletConnector: React.FC<{
                     });
                 }
             }
-        }, []);
+        }, [clientId, clientSecret, authKey]);
 
         const onConnectToWalletClick = useCallback(async (chain: IChain) => {
             if (chain) {
@@ -267,6 +274,7 @@ const WalletConnector: React.FC<{
         }, []);
 
         const setWallet = useCallback((wallet) => {
+            localStorage.setItem('wl-wallet-key', wallet.key);
             setViewState(viewState => {
                 return { ...viewState, selectedWallet: wallet };
             })
